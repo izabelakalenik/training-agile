@@ -66,11 +66,19 @@
   }
 
   function getVisibleNotes() {
-    return notesState.filter((n) => {
+    const base = notesState.filter((n) => {
       const isShiftMatch = activeShift === "all" || n.shift === activeShift;
       const isResolutionMatch = !showResolvedOnly || n.resolved;
       return isShiftMatch && isResolutionMatch;
     });
+    const pinnedFirst = [];
+    const others = [];
+    for (const note of base) {
+      if (note.pinned) pinnedFirst.push(note);
+      else others.push(note);
+    }
+
+    return [...pinnedFirst, ...others];
   }
 
   function render() {
