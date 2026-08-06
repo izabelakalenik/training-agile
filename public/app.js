@@ -65,8 +65,18 @@
   }
 
   function getVisibleNotes() {
-    if (activeShift === "all") return notesState;
-    return notesState.filter((n) => n.shift === activeShift);
+    const base = activeShift === "all"
+      ? notesState
+      : notesState.filter((n) => n.shift === activeShift);
+
+    const pinnedFirst = [];
+    const others = [];
+    for (const note of base) {
+      if (note.pinned) pinnedFirst.push(note);
+      else others.push(note);
+    }
+
+    return [...pinnedFirst, ...others];
   }
 
   function render() {
