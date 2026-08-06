@@ -7,8 +7,37 @@
   const statPinned = document.getElementById("stat-pinned");
   const shiftTabsEl = document.getElementById("shift-tabs");
   const createSlot = document.getElementById("create-slot");
+  const themeToggleEl = document.getElementById("theme-toggle");
   let notesState = [];
   let activeShift = "all";
+
+  function getStoredTheme() {
+    const stored = localStorage.getItem("theme");
+    return stored === "light" ? "light" : "dark";
+  }
+
+  function applyTheme(theme) {
+    const nextTheme = theme === "light" ? "light" : "dark";
+    document.body.dataset.theme = nextTheme;
+    if (!themeToggleEl) return;
+
+    const isLight = nextTheme === "light";
+    themeToggleEl.textContent = isLight ? "Dark mode" : "Light mode";
+    themeToggleEl.setAttribute("aria-pressed", isLight ? "true" : "false");
+    themeToggleEl.setAttribute("aria-label", isLight ? "Switch to dark mode" : "Switch to light mode");
+  }
+
+  function mountThemeToggle() {
+    if (!themeToggleEl) return;
+
+    applyTheme(getStoredTheme());
+    themeToggleEl.addEventListener("click", () => {
+      const current = document.body.dataset.theme === "light" ? "light" : "dark";
+      const next = current === "light" ? "dark" : "light";
+      localStorage.setItem("theme", next);
+      applyTheme(next);
+    });
+  }
 
   async function loadHealth() {
     try {
@@ -174,6 +203,7 @@
     });
   }
 
+  mountThemeToggle();
   mountCreateForm();
   await loadHealth();
   renderShiftTabs();
