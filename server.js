@@ -8,11 +8,10 @@ const PORT = Number(process.env.PORT) || 3903;
 const ROOT = __dirname;
 const PUBLIC = path.join(ROOT, "public");
 
-/** @type {{ id:number, shift:string, author:string, body:string, pinned:boolean, createdAt:string }[]} */
 let notes = [
-  { id: 1, shift: "day", author: "ops-lead", body: "Batch window slips 20m — payments on watch.", pinned: false, createdAt: "2026-03-10T06:10:00Z" },
-  { id: 2, shift: "day", author: "net", body: "Core switch reboot scheduled 22:00 — confirm change ticket.", pinned: true, createdAt: "2026-03-10T07:00:00Z" },
-  { id: 3, shift: "night", author: "soc", body: "Noise on VPN auth — correlating with vendor push.", pinned: false, createdAt: "2026-03-10T01:40:00Z" },
+  { id: 1, shift: "day", author: "ops-lead", body: "Batch window slips 20m — payments on watch.", pinned: false, resolved: false, createdAt: "2026-03-10T06:10:00Z" },
+  { id: 2, shift: "day", author: "net", body: "Core switch reboot scheduled 22:00 — confirm change ticket.", pinned: true, resolved: false, createdAt: "2026-03-10T07:00:00Z" },
+  { id: 3, shift: "night", author: "soc", body: "Noise on VPN auth — correlating with vendor push.", pinned: false, resolved: false, createdAt: "2026-03-10T01:40:00Z" },
 ];
 let nextId = 4;
 
@@ -97,13 +96,14 @@ const server = http.createServer(async (req, res) => {
       author: author || "crew",
       body,
       pinned: false,
+      resolved: false,
       createdAt: new Date().toISOString(),
     };
     notes = [...notes, note];
     return send(res, 201, { note });
   }
 
-  // Track Alpha: PATCH /api/notes/:id  { pinned: true|false }
+  // Track Alpha: PATCH /api/notes/:id  { pinned?: boolean, resolved?: boolean }
   if (req.method === "PATCH" && url.startsWith("/api/notes/")) {
     const id = Number(url.slice("/api/notes/".length));
     if (!Number.isInteger(id) || id < 1) {
@@ -117,8 +117,8 @@ const server = http.createServer(async (req, res) => {
       return send(res, 400, { error: "invalid json body" });
     }
 
-    if (!body || typeof body.pinned !== "boolean") {
-      return send(res, 400, { error: "expected body: { pinned: true|false }" });
+    if (!body || (typeof body.pinned !== "boolean" && typeof body.resolved !== "boolean")) {
+      return send(res, 400, { error: "expected body with at least one of: pinned, resolved" });
     }
 
     const note = notes.find((n) => n.id === id);
@@ -126,7 +126,12 @@ const server = http.createServer(async (req, res) => {
       return send(res, 404, { error: "note not found" });
     }
 
-    note.pinned = body.pinned;
+    if (typeof body.pinned === "boolean") {
+      note.pinned = body.pinned;
+    }
+    if (typeof body.resolved === "boolean") {
+      note.resolved = body.resolved;
+    }
     return send(res, 200, { note });
   }
 
