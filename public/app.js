@@ -10,6 +10,7 @@
   const themeToggleEl = document.getElementById("theme-toggle");
   let notesState = [];
   let activeShift = "all";
+  let showResolvedOnly = false;
 
   function getStoredTheme() {
     const stored = localStorage.getItem("theme");
@@ -65,8 +66,11 @@
   }
 
   function getVisibleNotes() {
-    if (activeShift === "all") return notesState;
-    return notesState.filter((n) => n.shift === activeShift);
+    return notesState.filter((n) => {
+      const isShiftMatch = activeShift === "all" || n.shift === activeShift;
+      const isResolutionMatch = !showResolvedOnly || n.resolved;
+      return isShiftMatch && isResolutionMatch;
+    });
   }
 
   function render() {
@@ -74,13 +78,16 @@
     updateStats(notesState);
     countEl.textContent = `${visibleNotes.length} showing`;
     listEl.innerHTML = visibleNotes.map((n) => `
-      <li class="card ${n.pinned ? "pinned" : ""}" data-shift="${n.shift}" data-id="${n.id}">
+      <li class="card ${n.pinned ? "pinned" : ""} ${n.resolved ? "resolved" : ""}" data-shift="${n.shift}" data-id="${n.id}">
         <div class="card-top">
           <div class="author">${escapeHtml(n.author)}</div>
           <span class="shift-tag ${n.shift}">${escapeHtml(n.shift)}</span>
         </div>
         <div class="body">${escapeHtml(n.body)}</div>
         <div class="meta-row">
+          <button class="resolve-toggle ${n.resolved ? "is-resolved" : ""}" type="button" data-action="toggle-resolved" data-id="${n.id}" aria-pressed="${n.resolved ? "true" : "false"}">
+            ${n.resolved ? "resolved" : "resolve"}
+          </button>
           <button class="pin-toggle ${n.pinned ? "is-pinned" : ""}" type="button" data-action="toggle-pin" data-id="${n.id}" aria-pressed="${n.pinned ? "true" : "false"}">
             ${n.pinned ? "pinned" : "📌"}
           </button>
@@ -94,10 +101,15 @@
   function renderShiftTabs() {
     if (!shiftTabsEl) return;
     shiftTabsEl.innerHTML = `
-      <div class="shift-tabs-control" role="tablist" aria-label="Filter notes by shift">
-        <button type="button" class="shift-tab ${activeShift === "all" ? "active" : ""}" data-shift="all" role="tab" aria-selected="${activeShift === "all" ? "true" : "false"}">All</button>
-        <button type="button" class="shift-tab ${activeShift === "day" ? "active" : ""}" data-shift="day" role="tab" aria-selected="${activeShift === "day" ? "true" : "false"}">Day</button>
-        <button type="button" class="shift-tab ${activeShift === "night" ? "active" : ""}" data-shift="night" role="tab" aria-selected="${activeShift === "night" ? "true" : "false"}">Night</button>
+      <div class="filter-row">
+        <div class="shift-tabs-control" role="tablist" aria-label="Filter notes by shift">
+          <button type="button" class="shift-tab ${activeShift === "all" ? "active" : ""}" data-shift="all" role="tab" aria-selected="${activeShift === "all" ? "true" : "false"}">All</button>
+          <button type="button" class="shift-tab ${activeShift === "day" ? "active" : ""}" data-shift="day" role="tab" aria-selected="${activeShift === "day" ? "true" : "false"}">Day</button>
+          <button type="button" class="shift-tab ${activeShift === "night" ? "active" : ""}" data-shift="night" role="tab" aria-selected="${activeShift === "night" ? "true" : "false"}">Night</button>
+        </div>
+        <button type="button" class="resolved-filter ${showResolvedOnly ? "active" : ""}" data-action="toggle-resolved-filter" aria-pressed="${showResolvedOnly ? "true" : "false"}">
+          ${showResolvedOnly ? "All notes" : "Resolved only"}
+        </button>
       </div>
     `;
   }
@@ -117,17 +129,17 @@
     render();
   }
 
-  async function togglePin(id, shouldPin) {
+  async function patchNote(id, updates) {
     const r = await fetch(`/api/notes/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pinned: shouldPin }),
+      body: JSON.stringify(updates),
     });
-    if (!r.ok) throw new Error(`pin toggle failed: ${r.status}`);
+    if (!r.ok) throw new Error(`note update failed: ${r.status}`);
     const j = await r.json();
     const updated = j.note;
     notesState = notesState.map((n) => (n.id === updated.id ? updated : n));
-    render(notesState);
+    render();
   }
 
   function mountCreateForm() {
@@ -212,6 +224,15 @@
   shiftTabsEl?.addEventListener("click", (e) => {
     const target = e.target;
     if (!(target instanceof HTMLElement)) return;
+
+    const filterBtn = target.closest("button[data-action='toggle-resolved-filter']");
+    if (filterBtn instanceof HTMLButtonElement) {
+      showResolvedOnly = !showResolvedOnly;
+      renderShiftTabs();
+      render();
+      return;
+    }
+
     const tab = target.closest("button[data-shift]");
     if (!(tab instanceof HTMLButtonElement)) return;
 
@@ -227,7 +248,8 @@
   listEl.addEventListener("click", async (e) => {
     const target = e.target;
     if (!(target instanceof HTMLElement)) return;
-    const btn = target.closest("button[data-action='toggle-pin']");
+
+    const btn = target.closest("button[data-action='toggle-pin'], button[data-action='toggle-resolved']");
     if (!(btn instanceof HTMLButtonElement)) return;
 
     const id = Number(btn.dataset.id);
@@ -236,26 +258,47 @@
     const note = notesState.find((n) => n.id === id);
     if (!note) return;
 
+    const action = btn.dataset.action;
+    const isPinAction = action === "toggle-pin";
     const shouldPin = !note.pinned;
+    const shouldResolve = !note.resolved;
     const card = btn.closest(".card");
 
     btn.disabled = true;
-    btn.classList.toggle("is-pinned", shouldPin);
-    btn.textContent = shouldPin ? "pinned" : "📌";
-    btn.setAttribute("aria-pressed", shouldPin ? "true" : "false");
-    if (card instanceof HTMLElement) {
-      card.classList.toggle("pinned", shouldPin);
+    if (isPinAction) {
+      btn.classList.toggle("is-pinned", shouldPin);
+      btn.textContent = shouldPin ? "pinned" : "📌";
+      btn.setAttribute("aria-pressed", shouldPin ? "true" : "false");
+      if (card instanceof HTMLElement) {
+        card.classList.toggle("pinned", shouldPin);
+      }
+    } else {
+      btn.classList.toggle("is-resolved", shouldResolve);
+      btn.textContent = shouldResolve ? "resolved" : "resolve";
+      btn.setAttribute("aria-pressed", shouldResolve ? "true" : "false");
+      if (card instanceof HTMLElement) {
+        card.classList.toggle("resolved", shouldResolve);
+      }
     }
 
     try {
-      await togglePin(id, shouldPin);
+      await patchNote(id, isPinAction ? { pinned: shouldPin } : { resolved: shouldResolve });
     } catch (err) {
       console.error(err);
-      btn.classList.toggle("is-pinned", note.pinned);
-      btn.textContent = note.pinned ? "pinned" : "📌";
-      btn.setAttribute("aria-pressed", note.pinned ? "true" : "false");
-      if (card instanceof HTMLElement) {
-        card.classList.toggle("pinned", note.pinned);
+      if (isPinAction) {
+        btn.classList.toggle("is-pinned", note.pinned);
+        btn.textContent = note.pinned ? "pinned" : "📌";
+        btn.setAttribute("aria-pressed", note.pinned ? "true" : "false");
+        if (card instanceof HTMLElement) {
+          card.classList.toggle("pinned", note.pinned);
+        }
+      } else {
+        btn.classList.toggle("is-resolved", note.resolved);
+        btn.textContent = note.resolved ? "resolved" : "resolve";
+        btn.setAttribute("aria-pressed", note.resolved ? "true" : "false");
+        if (card instanceof HTMLElement) {
+          card.classList.toggle("resolved", note.resolved);
+        }
       }
     } finally {
       btn.disabled = false;
