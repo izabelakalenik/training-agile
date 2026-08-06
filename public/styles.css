@@ -128,8 +128,12 @@ h1 {
 .card[data-shift="night"] { border-left-color: var(--night); }
 .card.pinned {
   border-left-color: var(--pin);
-  background: rgba(249, 115, 22, 0.08);
-  box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.25);
+  background:
+    linear-gradient(90deg, rgba(249, 115, 22, 0.16) 0%, rgba(249, 115, 22, 0.05) 24%, rgba(249, 115, 22, 0.03) 100%),
+    #1a1410;
+  box-shadow:
+    inset 0 0 0 1px rgba(249, 115, 22, 0.45),
+    0 0 0 1px rgba(249, 115, 22, 0.15);
 }
 .card-top {
   display: flex;
@@ -160,6 +164,33 @@ h1 {
   border-radius: 999px;
   background: rgba(249, 115, 22, 0.2);
   color: var(--pin);
+}
+.pin-toggle {
+  border: 1px solid color-mix(in srgb, var(--pin) 50%, var(--line));
+  background: rgba(249, 115, 22, 0.14);
+  color: #ffb27f;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  min-width: 58px;
+  cursor: pointer;
+}
+.pin-toggle:hover {
+  background: rgba(249, 115, 22, 0.24);
+  color: #ffd1b1;
+}
+.pin-toggle:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.pin-toggle.is-pinned,
+.card.pinned .pin-toggle {
+  background: rgba(249, 115, 22, 0.25);
+  border-color: rgba(249, 115, 22, 0.7);
+  color: #ffd8be;
 }
 .time { font-size: 12px; color: var(--muted); margin-left: auto; }
 

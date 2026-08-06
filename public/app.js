@@ -5,6 +5,7 @@
   const statDay = document.getElementById("stat-day");
   const statNight = document.getElementById("stat-night");
   const statPinned = document.getElementById("stat-pinned");
+  let notesState = [];
 
   async function loadHealth() {
     try {
@@ -42,7 +43,9 @@
         </div>
         <div class="body">${escapeHtml(n.body)}</div>
         <div class="meta-row">
-          ${n.pinned ? '<span class="badge">pinned</span>' : ""}
+          <button class="pin-toggle ${n.pinned ? "is-pinned" : ""}" type="button" data-action="toggle-pin" data-id="${n.id}" aria-pressed="${n.pinned ? "true" : "false"}">
+            ${n.pinned ? "pinned" : "📌"}
+          </button>
           <span class="time">${escapeHtml(formatTime(n.createdAt))}</span>
           <!-- Track Alpha: pin / unpin control -->
         </div>
@@ -61,11 +64,62 @@
   async function loadNotes() {
     const r = await fetch("/api/notes");
     const j = await r.json();
-    render(j.notes || []);
+    notesState = Array.isArray(j.notes) ? j.notes : [];
+    render(notesState);
+  }
+
+  async function togglePin(id, shouldPin) {
+    const r = await fetch(`/api/notes/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pinned: shouldPin }),
+    });
+    if (!r.ok) throw new Error(`pin toggle failed: ${r.status}`);
+    const j = await r.json();
+    const updated = j.note;
+    notesState = notesState.map((n) => (n.id === updated.id ? updated : n));
+    render(notesState);
   }
 
   await loadHealth();
   await loadNotes();
+  listEl.addEventListener("click", async (e) => {
+    const target = e.target;
+    if (!(target instanceof HTMLElement)) return;
+    const btn = target.closest("button[data-action='toggle-pin']");
+    if (!(btn instanceof HTMLButtonElement)) return;
+
+    const id = Number(btn.dataset.id);
+    if (!Number.isInteger(id)) return;
+
+    const note = notesState.find((n) => n.id === id);
+    if (!note) return;
+
+    const shouldPin = !note.pinned;
+    const card = btn.closest(".card");
+
+    btn.disabled = true;
+    btn.classList.toggle("is-pinned", shouldPin);
+    btn.textContent = shouldPin ? "pinned" : "📌";
+    btn.setAttribute("aria-pressed", shouldPin ? "true" : "false");
+    if (card instanceof HTMLElement) {
+      card.classList.toggle("pinned", shouldPin);
+    }
+
+    try {
+      await togglePin(id, shouldPin);
+    } catch (err) {
+      console.error(err);
+      btn.classList.toggle("is-pinned", note.pinned);
+      btn.textContent = note.pinned ? "pinned" : "📌";
+      btn.setAttribute("aria-pressed", note.pinned ? "true" : "false");
+      if (card instanceof HTMLElement) {
+        card.classList.toggle("pinned", note.pinned);
+      }
+    } finally {
+      btn.disabled = false;
+    }
+  });
   // Track Charlie: wire tabs into #shift-tabs
   // Track Bravo: wire create form into #create-slot
   // Track Alpha: pin/unpin buttons + PATCH

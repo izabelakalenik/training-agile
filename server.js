@@ -79,7 +79,29 @@ const server = http.createServer(async (req, res) => {
 
   // Track Alpha: PATCH /api/notes/:id  { pinned: true|false }
   if (req.method === "PATCH" && url.startsWith("/api/notes/")) {
-    return send(res, 501, { error: "not implemented — Track Alpha" });
+    const id = Number(url.slice("/api/notes/".length));
+    if (!Number.isInteger(id) || id < 1) {
+      return send(res, 400, { error: "invalid note id" });
+    }
+
+    let body;
+    try {
+      body = await readBody(req);
+    } catch {
+      return send(res, 400, { error: "invalid json body" });
+    }
+
+    if (!body || typeof body.pinned !== "boolean") {
+      return send(res, 400, { error: "expected body: { pinned: true|false }" });
+    }
+
+    const note = notes.find((n) => n.id === id);
+    if (!note) {
+      return send(res, 404, { error: "note not found" });
+    }
+
+    note.pinned = body.pinned;
+    return send(res, 200, { note });
   }
 
   if (url.startsWith("/api/")) return send(res, 404, { error: "unknown api route" });
