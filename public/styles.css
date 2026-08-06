@@ -166,3 +166,59 @@ h1 {
 /* Track Alpha: pin button styles */
 /* Track Charlie: active tab styles on #shift-tabs */
 /* Track Bravo: form fields in #create-slot */
+.create-form {
+  display: grid;
+  gap: 10px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field span {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.create-form input,
+.create-form select,
+.create-form textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: #15120f;
+  color: var(--ink);
+  border-radius: 6px;
+  padding: 9px 10px;
+  font: inherit;
+}
+
+.create-form textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+.create-form button {
+  border: 1px solid color-mix(in srgb, var(--pin) 45%, var(--line));
+  background: rgba(249, 115, 22, 0.16);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.create-form button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.form-error {
+  min-height: 1em;
+  margin: 0;
+  color: #fca5a5;
+  font-size: 12px;
+}

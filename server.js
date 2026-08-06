@@ -74,7 +74,33 @@ const server = http.createServer(async (req, res) => {
 
   // Track Bravo: POST /api/notes
   if (req.method === "POST" && url === "/api/notes") {
-    return send(res, 501, { error: "not implemented — Track Bravo" });
+    let payload;
+    try {
+      payload = await readBody(req);
+    } catch {
+      return send(res, 400, { error: "invalid JSON" });
+    }
+
+    const shift = String(payload?.shift || "").trim().toLowerCase();
+    const author = String(payload?.author || "").trim();
+    const body = String(payload?.body || "").trim();
+    if (!body) {
+      return send(res, 400, { error: "body is required" });
+    }
+    if (shift !== "day" && shift !== "night") {
+      return send(res, 400, { error: "shift must be day or night" });
+    }
+
+    const note = {
+      id: nextId++,
+      shift,
+      author: author || "crew",
+      body,
+      pinned: false,
+      createdAt: new Date().toISOString(),
+    };
+    notes = [...notes, note];
+    return send(res, 201, { note });
   }
 
   // Track Alpha: PATCH /api/notes/:id  { pinned: true|false }
