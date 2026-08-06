@@ -5,7 +5,9 @@
   const statDay = document.getElementById("stat-day");
   const statNight = document.getElementById("stat-night");
   const statPinned = document.getElementById("stat-pinned");
+  const shiftTabsEl = document.getElementById("shift-tabs");
   let notesState = [];
+  let activeShift = "all";
 
   async function loadHealth() {
     try {
@@ -32,10 +34,16 @@
     }
   }
 
-  function render(notes) {
-    updateStats(notes);
-    countEl.textContent = `${notes.length} showing`;
-    listEl.innerHTML = notes.map((n) => `
+  function getVisibleNotes() {
+    if (activeShift === "all") return notesState;
+    return notesState.filter((n) => n.shift === activeShift);
+  }
+
+  function render() {
+    const visibleNotes = getVisibleNotes();
+    updateStats(notesState);
+    countEl.textContent = `${visibleNotes.length} showing`;
+    listEl.innerHTML = visibleNotes.map((n) => `
       <li class="card ${n.pinned ? "pinned" : ""}" data-shift="${n.shift}" data-id="${n.id}">
         <div class="card-top">
           <div class="author">${escapeHtml(n.author)}</div>
@@ -53,6 +61,17 @@
     `).join("");
   }
 
+  function renderShiftTabs() {
+    if (!shiftTabsEl) return;
+    shiftTabsEl.innerHTML = `
+      <div class="shift-tabs-control" role="tablist" aria-label="Filter notes by shift">
+        <button type="button" class="shift-tab ${activeShift === "all" ? "active" : ""}" data-shift="all" role="tab" aria-selected="${activeShift === "all" ? "true" : "false"}">All</button>
+        <button type="button" class="shift-tab ${activeShift === "day" ? "active" : ""}" data-shift="day" role="tab" aria-selected="${activeShift === "day" ? "true" : "false"}">Day</button>
+        <button type="button" class="shift-tab ${activeShift === "night" ? "active" : ""}" data-shift="night" role="tab" aria-selected="${activeShift === "night" ? "true" : "false"}">Night</button>
+      </div>
+    `;
+  }
+
   function escapeHtml(s) {
     return String(s)
       .replaceAll("&", "&amp;")
@@ -65,7 +84,7 @@
     const r = await fetch("/api/notes");
     const j = await r.json();
     notesState = Array.isArray(j.notes) ? j.notes : [];
-    render(notesState);
+    render();
   }
 
   async function togglePin(id, shouldPin) {
@@ -78,11 +97,28 @@
     const j = await r.json();
     const updated = j.note;
     notesState = notesState.map((n) => (n.id === updated.id ? updated : n));
-    render(notesState);
+    render();
   }
 
   await loadHealth();
+  renderShiftTabs();
   await loadNotes();
+
+  shiftTabsEl?.addEventListener("click", (e) => {
+    const target = e.target;
+    if (!(target instanceof HTMLElement)) return;
+    const tab = target.closest("button[data-shift]");
+    if (!(tab instanceof HTMLButtonElement)) return;
+
+    const nextShift = tab.dataset.shift;
+    if (nextShift !== "all" && nextShift !== "day" && nextShift !== "night") return;
+    if (nextShift === activeShift) return;
+
+    activeShift = nextShift;
+    renderShiftTabs();
+    render();
+  });
+
   listEl.addEventListener("click", async (e) => {
     const target = e.target;
     if (!(target instanceof HTMLElement)) return;
