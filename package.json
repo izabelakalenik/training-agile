@@ -1,0 +1,9 @@
+{
+  "name": "shiftboard",
+  "private": true,
+  "description": "Agile challenge 3 — shift handoff board (no dependencies)",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  }
+}

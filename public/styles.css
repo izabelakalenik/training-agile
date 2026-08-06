@@ -1,0 +1,168 @@
+:root {
+  --bg: #14110e;
+  --ink: #f5f0e8;
+  --muted: #a89f91;
+  --card: #1c1814;
+  --line: #2e2820;
+  --day: #eab308;
+  --night: #6366f1;
+  --pin: #f97316;
+  --ok: #4ade80;
+  --font-display: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  --font: system-ui, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--font);
+  background:
+    linear-gradient(135deg, rgba(234, 179, 8, 0.08) 0%, transparent 40%),
+    linear-gradient(225deg, rgba(99, 102, 241, 0.1) 0%, transparent 45%),
+    var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 28px 18px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(28, 24, 20, 0.95);
+}
+.eyebrow {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pin);
+  font-weight: 700;
+}
+h1 {
+  margin: 4px 0 6px;
+  font-size: 30px;
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+.sub { margin: 0; color: var(--muted); font-size: 14px; }
+.top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.pill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--muted);
+}
+.pill.ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, var(--line)); }
+.shift-now { font-size: 12px; color: var(--muted); }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 16px 28px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+.stat {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.stat-n { display: block; font-size: 26px; font-weight: 700; font-family: var(--font-display); }
+.stat-l { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+.stat.day .stat-n { color: var(--day); }
+.stat.night .stat-n { color: var(--night); }
+.stat.pin .stat-n { color: var(--pin); }
+
+.layout {
+  display: grid;
+  gap: 16px;
+  padding: 0 28px 40px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+@media (min-width: 880px) {
+  .layout { grid-template-columns: 1fr 260px; align-items: start; }
+}
+
+.tabs-slot {
+  min-height: 44px;
+  margin-bottom: 12px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: rgba(28, 24, 20, 0.6);
+}
+.slot-hint { margin: 0; font-size: 12px; color: var(--muted); font-style: italic; }
+.panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px 18px;
+}
+.side-panel h2 { margin: 0 0 8px; font-size: 15px; font-family: var(--font-display); }
+.small { font-size: 12px; margin: 8px 0 0; }
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 14px;
+}
+.panel-head h2 { margin: 0; font-size: 16px; font-family: var(--font-display); }
+.muted { color: var(--muted); font-size: 13px; }
+
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.card {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--day);
+  border-radius: 6px;
+  padding: 14px 16px;
+  background: #16120f;
+}
+.card[data-shift="night"] { border-left-color: var(--night); }
+.card.pinned {
+  border-left-color: var(--pin);
+  background: rgba(249, 115, 22, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.25);
+}
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.author { font-weight: 700; font-size: 13px; }
+.shift-tag {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.shift-tag.day { background: rgba(234, 179, 8, 0.2); color: var(--day); }
+.shift-tag.night { background: rgba(99, 102, 241, 0.25); color: #a5b4fc; }
+.body { margin: 8px 0; font-size: 15px; line-height: 1.45; font-family: var(--font-display); }
+.meta-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(249, 115, 22, 0.2);
+  color: var(--pin);
+}
+.time { font-size: 12px; color: var(--muted); margin-left: auto; }
+
+/* Track Alpha: pin button styles */
+/* Track Charlie: active tab styles on #shift-tabs */
+/* Track Bravo: form fields in #create-slot */

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ShiftBoard</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <p class="eyebrow">Northvale Ops</p>
+      <h1>ShiftBoard</h1>
+      <p class="sub">Day ↔ night handoff tray</p>
+    </div>
+    <div class="top-right">
+      <div id="health" class="pill">checking…</div>
+      <div class="shift-now" id="shift-hint">Starter · no “current shift” yet</div>
+    </div>
+  </header>
+
+  <section class="stats" aria-label="Handoff summary">
+    <div class="stat day">
+      <span class="stat-n" id="stat-day">—</span>
+      <span class="stat-l">Day notes</span>
+    </div>
+    <div class="stat night">
+      <span class="stat-n" id="stat-night">—</span>
+      <span class="stat-l">Night notes</span>
+    </div>
+    <div class="stat pin">
+      <span class="stat-n" id="stat-pinned">—</span>
+      <span class="stat-l">Pinned</span>
+    </div>
+  </section>
+
+  <main class="layout">
+    <div class="col-main">
+      <!-- Track Charlie: All / Day / Night tabs -->
+      <div id="shift-tabs" class="tabs-slot" data-track="charlie">
+        <p class="slot-hint">Track Charlie · All / Day / Night filter</p>
+      </div>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Handoff notes</h2>
+          <span id="count" class="muted">—</span>
+        </div>
+        <ul id="list" class="list"></ul>
+      </section>
+    </div>
+
+    <aside class="col-side">
+      <!-- Track Bravo: add-note form -->
+      <section class="panel side-panel" id="create-slot" data-track="bravo">
+        <h2>Leave a note</h2>
+        <p class="slot-hint">Track Bravo · create form wires here</p>
+        <p class="muted small">Crews add notes without editing seed data.</p>
+      </section>
+    </aside>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
